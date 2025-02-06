@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f8e87551efb1d2ab2b24e0ef7ed2b885",
+    "content-hash": "272deb5f1e13ea177d768dd0b2720443",
     "packages": [
         {
             "name": "beste/clock",
@@ -1855,14 +1855,9 @@
         {
             "name": "kreait/firebase-php",
             "version": "7.16.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/kreait/firebase-php.git",
-                "reference": "81c35806ce57eed86d5dc865f756974a23e0e6a3"
-            },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kreait/firebase-php/zipball/81c35806ce57eed86d5dc865f756974a23e0e6a3",
+                "url": "https://mirrors.cloud.tencent.com/repository/composer/kreait/firebase-php/7.16.1/kreait-firebase-php-7.16.1.zip",
                 "reference": "81c35806ce57eed86d5dc865f756974a23e0e6a3",
                 "shasum": ""
             },
@@ -1919,7 +1914,6 @@
                     "Kreait\\Firebase\\": "src/Firebase"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1937,17 +1931,6 @@
                 "firebase",
                 "google",
                 "sdk"
-            ],
-            "support": {
-                "docs": "https://firebase-php.readthedocs.io",
-                "issues": "https://github.com/kreait/firebase-php/issues",
-                "source": "https://github.com/kreait/firebase-php"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/sponsors/jeromegamez",
-                    "type": "github"
-                }
             ],
             "time": "2025-01-20T10:10:11+00:00"
         },
