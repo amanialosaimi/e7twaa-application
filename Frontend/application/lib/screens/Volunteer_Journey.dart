@@ -213,11 +213,11 @@ class _VolunteerJourneyScreenState extends State<VolunteerJourneyScreen> {
         children: [
            Row(
             children: [
-              _buildStatItem(Icons.access_time_outlined, checkIn, 'تسجيل الدخول', Colors.black),
+              _buildStatItem(Icons.access_time_outlined, checkIn, 'مجموع الساعات', Colors.black),
               const SizedBox(width: 20),
               _buildStatItem(Icons.access_time_outlined, checkOut, 'تسجيل الخروج', Colors.black),
               const SizedBox(width: 20),
-              _buildStatItem(Icons.access_time_outlined, totalHours, 'مجموع الساعات', Colors.black),
+              _buildStatItem(Icons.access_time_outlined, totalHours, 'تسجيل الدخول', Colors.black),
             ],
           ),
            Container(
