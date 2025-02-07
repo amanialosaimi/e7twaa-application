@@ -11,32 +11,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
+  bool _isPressed = false; // Controls the scale effect on the circle.
 
   void _onItemTapped(int index) {
-     print('Tapped index: $index');
+    print('Tapped index: $index');
 
-     if (index == _selectedIndex) return;
+    if (index == _selectedIndex) return;
 
-     switch (index) {
+    switch (index) {
       case 0:
-         Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const ProfileScreen()),
         );
         break;
       case 1:
-         setState(() {
+        setState(() {
           _selectedIndex = index;
         });
         break;
       case 2:
-         Navigator.pushReplacement(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const VolunteerJourneyScreen()),
         );
         break;
       default:
-         break;
+        break;
     }
   }
 
@@ -44,8 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-       bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFFFBB040),
         unselectedItemColor: Colors.grey,
@@ -67,10 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
       body: Stack(
         children: [
-           Positioned(
+          // Background image positioned behind the content.
+          Positioned(
             top: 120,
             left: 0,
             right: 0,
@@ -80,13 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
               fit: BoxFit.cover,
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 60),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Container(
+                // Header with title and logo.
+                Container(
                   decoration: const BoxDecoration(
                     border: Border(
                       bottom: BorderSide(color: Color(0xFF939597), width: 0.3),
@@ -112,9 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 15),
-                 Container(
+                // Welcome text.
+                Container(
                   padding: const EdgeInsets.only(right: 23),
                   alignment: Alignment.centerRight,
                   child: const Text(
@@ -126,9 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 5),
-
                 Container(
                   padding: const EdgeInsets.only(right: 23),
                   alignment: Alignment.centerRight,
@@ -140,9 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 80),
-                 Center(
+                // Central container with the pressable circle and stats.
+                Center(
                   child: Container(
                     width: 330,
                     height: 300,
@@ -162,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        // Pressable circle button with shrink effect.
                         Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -174,39 +173,65 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          child: Container(
-                            width: 130,
-                            height: 130,
-                            padding: const EdgeInsets.all(15),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFBB040),
-                              shape: BoxShape.circle,
-                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.touch_app, color: Colors.white, size: 35),
-                                SizedBox(height: 5),
-                                Text(
-                                  'تسجيل الدخول',
-                                  style: TextStyle(
-                                    fontSize: 19,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(65),
+                            onTap: () {
+                              print("Circle pressed");
+                              // Add your onTap functionality here.
+                            },
+                            onTapDown: (_) {
+                              setState(() {
+                                _isPressed = true;
+                              });
+                            },
+                            onTapUp: (_) {
+                              setState(() {
+                                _isPressed = false;
+                              });
+                            },
+                            onTapCancel: () {
+                              setState(() {
+                                _isPressed = false;
+                              });
+                            },
+                            child: AnimatedScale(
+                              scale: _isPressed ? 0.95 : 1.0,
+                              duration: const Duration(milliseconds: 100),
+                              child: Container(
+                                width: 130,
+                                height: 130,
+                                padding: const EdgeInsets.all(15),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFFBB040),
+                                  shape: BoxShape.circle,
                                 ),
-                              ],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.touch_app, color: Colors.white, size: 35),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      'تسجيل الدخول',
+                                      style: TextStyle(
+                                        fontSize: 19,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
+                        // Stat items row.
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatItem(Icons.access_time_outlined, '09:00 PM', 'تسجيل الدخول', Colors.black),
+                            _buildStatItem(Icons.access_time_outlined, '09:00 PM', ' ساعات اليوم', Colors.black),
                             _buildStatItem(Icons.access_time_outlined, '12:00 PM', 'تسجيل الخروج', Colors.black),
-                            _buildStatItem(Icons.access_time_outlined, '03:00', 'ساعات اليوم', Colors.black),
+                            _buildStatItem(Icons.access_time_outlined, '03:00', ' تسجيل الدخول', Colors.black),
                           ],
                         ),
                       ],
