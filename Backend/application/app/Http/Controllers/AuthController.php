@@ -1,12 +1,12 @@
 <?php
-
+//يحفظ بيانات المستخدم في Session بعد تسجيل الدخول
+// يضيف logout() لمسح بيانات الجلسة عند تسجيل الخروج
+//يضيف getUser() لاسترجاع بيانات المستخدم بدون الحاجة لإرسال التوكن مع كل طلب
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Kreait\Firebase\Factory;
-use Kreait\Firebase\Auth;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Services\FirebaseService;
+use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
@@ -14,64 +14,49 @@ class AuthController extends Controller
 
     public function __construct()
     {
-        $firebase = (new Factory)
-            ->withServiceAccount(config('firebase.credentials'));
-
-        $this->firebaseAuth = $firebase->createAuth();
+        $this->firebaseAuth = FirebaseService::getInstance()->getAuth();
     }
 
     public function login(Request $request)
     {
-        \Log::info('Login request data: ', $request->all());  // Log the incoming request data
-    
         $request->validate([
-            'email' => 'nullable|email',
-            'phone' => 'nullable|string',
+            'idToken' => 'required|string',
         ]);
-    
-        if (!$request->email && !$request->phone) {
-            return response()->json(['error' => 'Email or phone number is required'], 400);
-        }
-    
+
         try {
-            // Check if user exists in Firebase Authentication
-            $user = null;
-    
-            if ($request->email) {
-                $user = $this->firebaseAuth->getUserByEmail($request->email);
-            } elseif ($request->phone) {
-                $user = $this->firebaseAuth->getUserByPhoneNumber($request->phone);
-            }
-    
-            if ($user) {
-                // Check if the user exists in your Laravel users table
-                $localUser = User::where('email', $user->email)->orWhere('phone', $user->phoneNumber)->first();
-    
-                if (!$localUser) {
-                    // Create a new user in Laravel database
-                    $localUser = User::create([
-                        'name' => $user->displayName ?? 'User',
-                        'email' => $user->email,
-                        'phone' => $user->phoneNumber,
-                        'password' => Hash::make('default_password'), // Change this based on your logic
-                    ]);
-                }
-    
-                // Generate Laravel JWT Token (if using Laravel Passport/Sanctum)
-                $token = $localUser->createToken('authToken')->plainTextToken;
-    
-                return response()->json([
-                    'message' => 'Login successful',
-                    'token' => $token,
-                    'user' => $localUser
-                ]);
-            }
-    
-            return response()->json(['error' => 'User not found in Firebase'], 404);
+            $verifiedIdToken = $this->firebaseAuth->verifyIdToken($request->idToken);
+            $uid = $verifiedIdToken->claims()->get('sub');
+
+            $user = $this->firebaseAuth->getUser($uid);
+
+            // حفظ بيانات المستخدم في الجلسة
+            Session::put('user', [
+                'uid' => $user->uid,
+                'email' => $user->email ?? null,
+                'phone' => $user->phoneNumber ?? null,
+                'name' => $user->displayName ?? null,
+            ]);
+
+            return response()->json([
+                'message' => 'Login successful',
+                'user' => Session::get('user'),
+            ], 200);
         } catch (\Exception $e) {
-            \Log::error('Login error: ' . $e->getMessage());  // Log the error message
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => 'Invalid token'], 401);
         }
     }
-    
+
+    public function logout()
+    {
+        Session::forget('user');
+        return response()->json(['message' => 'Logout successful'], 200);
+    }
+
+    public function getUser()
+    {
+        if (Session::has('user')) {
+            return response()->json(['user' => Session::get('user')], 200);
+        }
+        return response()->json(['error' => 'No user logged in'], 401);
+    }
 }

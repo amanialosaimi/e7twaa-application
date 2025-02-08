@@ -1855,9 +1855,14 @@
         {
             "name": "kreait/firebase-php",
             "version": "7.16.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/kreait/firebase-php.git",
+                "reference": "81c35806ce57eed86d5dc865f756974a23e0e6a3"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/kreait/firebase-php/7.16.1/kreait-firebase-php-7.16.1.zip",
+                "url": "https://api.github.com/repos/kreait/firebase-php/zipball/81c35806ce57eed86d5dc865f756974a23e0e6a3",
                 "reference": "81c35806ce57eed86d5dc865f756974a23e0e6a3",
                 "shasum": ""
             },
@@ -1914,6 +1919,7 @@
                     "Kreait\\Firebase\\": "src/Firebase"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1931,6 +1937,17 @@
                 "firebase",
                 "google",
                 "sdk"
+            ],
+            "support": {
+                "docs": "https://firebase-php.readthedocs.io",
+                "issues": "https://github.com/kreait/firebase-php/issues",
+                "source": "https://github.com/kreait/firebase-php"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/jeromegamez",
+                    "type": "github"
+                }
             ],
             "time": "2025-01-20T10:10:11+00:00"
         },
@@ -10549,12 +10566,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
