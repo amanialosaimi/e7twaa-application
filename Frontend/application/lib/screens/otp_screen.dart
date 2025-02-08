@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart'; // ✅ Import your HomeScreen file
+import 'home_screen.dart';  
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -19,9 +19,9 @@ class _OtpScreenState extends State<OtpScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // ✅ Prevents default back button
+        automaticallyImplyLeading: false,  
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, // ✅ Aligns back button & title
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,  
           children: [
             IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -43,8 +43,8 @@ class _OtpScreenState extends State<OtpScreen> {
           // Background Image
           Positioned.fill(
             child: Image.asset(
-              'assets/background_image.jpeg', // ✅ Ensure correct path
-              fit: BoxFit.contain, // ✅ Covers full screen
+              'assets/background_image.jpeg',  
+              fit: BoxFit.contain,  
             ),
           ),
 
@@ -108,13 +108,13 @@ class _OtpScreenState extends State<OtpScreen> {
                       '00:20',
                       style: TextStyle(fontSize: 16, color: Colors.black54),
                     ),
-                    const SizedBox(width: 10), // ✅ Spacing between text
+                    const SizedBox(width: 10),  
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const HomeScreen(), // ✅ Navigates to HomeScreen
+                            builder: (context) => const HomeScreen(),  
                           ),
                         );
                       },
@@ -123,7 +123,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black, // ✅ Changed color for clickable effect
+                          color: Colors.black,  
                         ),
                       ),
                     ),
