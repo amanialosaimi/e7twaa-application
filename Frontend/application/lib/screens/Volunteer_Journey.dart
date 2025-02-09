@@ -111,8 +111,9 @@ class _VolunteerJourneyScreenState extends State<VolunteerJourneyScreen> {
         showUnselectedLabels: false,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: ''),
+          BottomNavigationBarItem(icon:  Icon(Icons.person_outline, size: 35), label: ""),
+          BottomNavigationBarItem( icon: Icon(Icons.home_outlined, size: 35), 
+            label: '',),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: ''),
         ],
       ),
@@ -207,9 +208,9 @@ class _VolunteerJourneyScreenState extends State<VolunteerJourneyScreen> {
 
    Widget _buildVolunteerRecord(String day, String weekday, String checkIn, String checkOut, String totalHours) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
            Row(
             children: [
@@ -223,7 +224,7 @@ class _VolunteerJourneyScreenState extends State<VolunteerJourneyScreen> {
            Container(
             width: 65,
             height: 70,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),

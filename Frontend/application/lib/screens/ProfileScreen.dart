@@ -43,17 +43,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         onTap: _onItemTapped,
-        items: const [
+          items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person_outline, size: 35),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+            icon: Icon(Icons.home_outlined, size: 35), 
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
+            icon: Icon(Icons.calendar_today_outlined), 
             label: '',
           ),
         ],

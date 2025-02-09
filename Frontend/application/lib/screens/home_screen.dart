@@ -54,15 +54,15 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline, size: 35), // Uniform size
+            icon: Icon(Icons.person_outline, size: 35),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined, size: 35), // Uniform size
+            icon: Icon(Icons.home_outlined, size: 35), 
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined), // Uniform size
+            icon: Icon(Icons.calendar_today_outlined), 
             label: '',
           ),
         ],
