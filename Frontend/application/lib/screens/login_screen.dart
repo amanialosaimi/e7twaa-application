@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -10,14 +11,13 @@ class LoginScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-           Positioned.fill(
+          Positioned.fill(
             child: Image.asset(
               'assets/background_image.jpeg',
               fit: BoxFit.contain,
             ),
           ),
-
-           Padding(
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,7 +26,7 @@ class LoginScreen extends StatelessWidget {
 
                 Container(
                   alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right:0),
+                  padding: const EdgeInsets.only(right: 0),
                   child: const Text(
                     'تسجيل الدخول',
                     style: TextStyle(
@@ -53,7 +53,7 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                 Container(
+                Container(
                   height: 50,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -61,20 +61,21 @@ class LoginScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.grey.shade400, width: 1),
                   ),
-                  child: const TextField(
-                    decoration: InputDecoration(
+                  child: TextField(
+                    decoration: const InputDecoration(
                       border: InputBorder.none,
                       hintText: '111*********',
                       hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.left,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly], // Allow numbers only
                   ),
                 ),
 
                 const SizedBox(height: 30),
 
-                 Container(
+                Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 16),
                   child: const Text(
@@ -89,7 +90,7 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                 Container(
+                Container(
                   height: 50,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
@@ -113,6 +114,7 @@ class LoginScreen extends StatelessWidget {
                           ),
                           keyboardType: TextInputType.phone,
                           textAlign: TextAlign.left,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly], // Allow numbers only
                         ),
                       ),
                     ],
@@ -121,7 +123,7 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                 SizedBox(
+                SizedBox(
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
@@ -132,7 +134,6 @@ class LoginScreen extends StatelessWidget {
                         ),
                       );
                     },
-
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFBB040),
                       shape: RoundedRectangleBorder(
@@ -152,7 +153,7 @@ class LoginScreen extends StatelessWidget {
 
                 const Spacer(),
 
-                 Align(
+                Align(
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),

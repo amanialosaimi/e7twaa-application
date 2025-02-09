@@ -54,19 +54,20 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person_outline, size: 35), // Uniform size
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
+            icon: Icon(Icons.home_outlined, size: 35), // Uniform size
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
+            icon: Icon(Icons.calendar_today_outlined), // Uniform size
             label: '',
           ),
         ],
       ),
+      
       body: Stack(
         children: [
           // Background image positioned behind the content.
@@ -208,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: const [
-                                    Icon(Icons.touch_app, color: Colors.white, size: 35),
+                                    Icon(Icons.touch_app, color: Colors.white, size: 35), // Uniform size
                                     SizedBox(height: 5),
                                     Text(
                                       'تسجيل الدخول',
@@ -249,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildStatItem(IconData icon, String time, String label, Color iconColor) {
     return Column(
       children: [
-        Icon(icon, size: 30, color: iconColor),
+        Icon(icon, size: 28, color: iconColor), // Uniform size
         const SizedBox(height: 5),
         Text(
           time,
