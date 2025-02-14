@@ -7,7 +7,7 @@ use App\Http\Controllers\VolunteersController;
 
 
 // تسجيل الدخول باستخدام Firebase
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', action: [VolunteersController::class, 'login']);
 
 // تسجيل خروج المستخدم
 Route::post('/logout', [AuthController::class, 'logout']);

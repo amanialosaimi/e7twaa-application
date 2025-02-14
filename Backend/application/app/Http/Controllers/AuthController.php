@@ -1,62 +1,68 @@
 <?php
-//يحفظ بيانات المستخدم في Session بعد تسجيل الدخول
-// يضيف logout() لمسح بيانات الجلسة عند تسجيل الخروج
-//يضيف getUser() لاسترجاع بيانات المستخدم بدون الحاجة لإرسال التوكن مع كل طلب
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\FirebaseService;
-use Illuminate\Support\Facades\Session;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\Auth;
+use Exception;
+use Firebase\JWT\JWT;
+use Google\Cloud\Firestore\FirestoreClient;
+
 
 class AuthController extends Controller
 {
-    protected $firebaseAuth;
+    protected $firestore;
+    protected $auth;
 
     public function __construct()
     {
-        $this->firebaseAuth = FirebaseService::getInstance()->getAuth();
-    }
+        $factory = (new Factory)
+            ->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'));
 
+        $this->firestore = $factory->createFirestore()->database();
+        $this->database = $factory->createDatabase();
+    }
     public function login(Request $request)
     {
         $request->validate([
-            'idToken' => 'required|string',
+            'PhoneNumber' => 'required',
+            'NationalID' => 'required',
         ]);
 
+        $NationalID = $request->input('NationalID');
+         $phoneNumber = $request->input('PhoneNumber');
         try {
-            $verifiedIdToken = $this->firebaseAuth->verifyIdToken($request->idToken);
-            $uid = $verifiedIdToken->claims()->get('sub');
+            $firestore = $this->firestore->collection('Volunteers');
+          
+            $query = $firestore->collection('Volunteers')
+            ->where('NationalID', '=', $NationalID)
+            ->where('PhoneNumber', '=', $phoneNumber)
+            ->limit(1);
 
-            $user = $this->firebaseAuth->getUser($uid);
 
-            // حفظ بيانات المستخدم في الجلسة
-            Session::put('user', [
-                'uid' => $user->uid,
-                'email' => $user->email ?? null,
-                'phone' => $user->phoneNumber ?? null,
-                'name' => $user->displayName ?? null,
-            ]);
+            $documents = $query->documents();
 
-            return response()->json([
-                'message' => 'Login successful',
-                'user' => Session::get('user'),
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Invalid token'], 401);
+            if ($documents->isEmpty()) {
+                return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
+            }
+
+            $user = $documents->rows()[0];
+            
+            // إنشاء التوكن باستخدام JWT مع صلاحية أسبوع
+            $payload = [
+                'sub' => $user->id(),
+                'phone' => $user['phone'],
+                'national_id' => $user['national_id'],
+                'iat' => time(),
+                'exp' => time() + (60 * 60 * 24 * 20), // صالح لمدة 7 أيام
+            ];
+            
+            $token = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
+            
+            return response()->json(['token' => $token, 'user' => $user->data()], 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
         }
-    }
-
-    public function logout()
-    {
-        Session::forget('user');
-        return response()->json(['message' => 'Logout successful'], 200);
-    }
-
-    public function getUser()
-    {
-        if (Session::has('user')) {
-            return response()->json(['user' => Session::get('user')], 200);
-        }
-        return response()->json(['error' => 'No user logged in'], 401);
     }
 }
