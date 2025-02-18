@@ -7,7 +7,6 @@ use Kreait\Firebase\Factory;
 use Google\Cloud\Firestore\FirestoreClient;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Config;
 use Firebase\JWT\ExpiredException;
 use Carbon\Carbon;
@@ -24,8 +23,8 @@ class VolunteersController extends Controller
 
     public function checkUser(Request $request)
     {
-        $NationalID = $request->input('NationalID');
-        $phoneNumber = $request->input('PhoneNumber');
+        $NationalID = trim($request->input('NationalID'));
+        $phoneNumber = trim($request->input('PhoneNumber'));
 
         if (!$NationalID || !$phoneNumber) {
             return response()->json(['message' => 'NationalID and PhoneNumber are required'], 400);
@@ -56,8 +55,12 @@ class VolunteersController extends Controller
 
     public function login(Request $request)
     {
-        $NationalID = $request->input('NationalID');
-        $phoneNumber = $request->input('PhoneNumber');
+        $NationalID = trim($request->input('NationalID'));
+        $phoneNumber = trim($request->input('PhoneNumber'));
+
+        if (!$NationalID || !$phoneNumber) {
+            return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
+        }
 
         try {
             $query = $this->firestore->collection('Volunteers')
@@ -73,10 +76,17 @@ class VolunteersController extends Controller
 
             $user = $documents->rows()[0];
 
+            // التحقق من عدم حظر التوكن القديم
+            $oldToken = $request->bearerToken();
+            $blacklistedToken = $this->firestore->collection('BlacklistedTokens')->document($oldToken)->snapshot();
+            if ($blacklistedToken->exists()) {
+                return response()->json(['message' => 'تم تسجيل الخروج، الرجاء تسجيل الدخول مجددًا'], 401);
+            }
+
             $payload = [
                 'sub' => $user->id(),
-                'PhoneNumber' => $user['PhoneNumber'],
-                'NationalID' => $user['NationalID'],
+                'phoneNumber' => $user['PhoneNumber'],
+                'nationalID' => $user['NationalID'],
                 'iat' => time(),
                 'exp' => time() + (60 * 60 * 24 * 7), // التوكن صالح لمدة 7 أيام
             ];
@@ -100,8 +110,9 @@ class VolunteersController extends Controller
 
         try {
             $jwtSecret = Config::get('app.jwt_secret');
-            $decoded = JWT::decode($token, new Key($jwtSecret, 'HS256'));
+            JWT::decode($token, new Key($jwtSecret, 'HS256'));
 
+            // حفظ التوكن المحظور في Firestore
             $this->firestore->collection('BlacklistedTokens')->document($token)->set([
                 'token' => $token,
                 'expires_at' => Carbon::now()->addWeek(),
@@ -129,27 +140,5 @@ class VolunteersController extends Controller
         }
 
         return response()->json(['message' => 'التوكن صالح'], 200);
-    }
-
-    public function getUserFromToken(Request $request)
-    {
-        $token = $request->bearerToken();
-
-        if (!$token) {
-            return null;
-        }
-
-        try {
-            $jwtSecret = Config::get('app.jwt_secret');
-            $decoded = JWT::decode($token, new Key($jwtSecret, 'HS256'));
-
-            return (object) [
-                'id' => $decoded->sub,
-                'phone' => $decoded->PhoneNumber,
-                'national_id' => $decoded->NationalID
-            ];
-        } catch (\Exception $e) {
-            return null;
-        }
     }
 }
