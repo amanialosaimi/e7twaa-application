@@ -6,20 +6,20 @@ use Illuminate\Http\Request;
 use Kreait\Firebase\Factory;
 use Google\Cloud\Firestore\FirestoreClient;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Config;
 use Firebase\JWT\ExpiredException;
+use Carbon\Carbon;
+
 class VolunteersController extends Controller
 {
-   
     protected $firestore;
-    protected $database;
 
     public function __construct()
     {
-        $factory = (new Factory)
-            ->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'));
-
+        $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'));
         $this->firestore = $factory->createFirestore()->database();
-        $this->database = $factory->createDatabase();
     }
 
     public function checkUser(Request $request)
@@ -28,21 +28,14 @@ class VolunteersController extends Controller
         $phoneNumber = $request->input('PhoneNumber');
 
         if (!$NationalID || !$phoneNumber) {
-            return response()->json(['message' => 'NationalID and phoneNumber is required'], 400);
+            return response()->json(['message' => 'NationalID and PhoneNumber are required'], 400);
         }
 
         try {
-            $projectId = env('GOOGLE_CLOUD_PROJECT');
-            $firestore = new FirestoreClient([
-                'projectId' => $projectId,
-            ]);
-            ini_set('max_execution_time', 60);
-
-            $query = $firestore->collection('Volunteers')
+            $query = $this->firestore->collection('Volunteers')
                 ->where('NationalID', '=', $NationalID)
                 ->where('PhoneNumber', '=', $phoneNumber)
                 ->limit(1);
-
 
             $documents = $query->documents();
 
@@ -60,23 +53,17 @@ class VolunteersController extends Controller
             return response()->json(['error' => 'Firestore error: ' . $e->getMessage()], 500);
         }
     }
+
     public function login(Request $request)
     {
-    
         $NationalID = $request->input('NationalID');
         $phoneNumber = $request->input('PhoneNumber');
-        try {
-            $projectId = env('GOOGLE_CLOUD_PROJECT');
-            $firestore = new FirestoreClient([
-                'projectId' => $projectId,
-            ]);
-            ini_set('max_execution_time', 60);
 
-            $query = $firestore->collection('Volunteers')
+        try {
+            $query = $this->firestore->collection('Volunteers')
                 ->where('NationalID', '=', $NationalID)
                 ->where('PhoneNumber', '=', $phoneNumber)
                 ->limit(1);
-
 
             $documents = $query->documents();
 
@@ -85,22 +72,84 @@ class VolunteersController extends Controller
             }
 
             $user = $documents->rows()[0];
-            
-            // إنشاء التوكن باستخدام JWT مع صلاحية أسبوع
+
             $payload = [
                 'sub' => $user->id(),
                 'PhoneNumber' => $user['PhoneNumber'],
                 'NationalID' => $user['NationalID'],
                 'iat' => time(),
-                'exp' => time() + (60 * 60 * 24 * 20), // صالح لمدة 7 أيام
+                'exp' => time() + (60 * 60 * 24 * 7), // التوكن صالح لمدة 7 أيام
             ];
-            
-            $token = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
-            
+
+            $jwtSecret = Config::get('app.jwt_secret');
+            $token = JWT::encode($payload, $jwtSecret, 'HS256');
+
             return response()->json(['token' => $token, 'user' => $user->data()], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
+    public function logout(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return response()->json(['message' => 'لم يتم إرسال التوكن'], 400);
+        }
+
+        try {
+            $jwtSecret = Config::get('app.jwt_secret');
+            $decoded = JWT::decode($token, new Key($jwtSecret, 'HS256'));
+
+            $this->firestore->collection('BlacklistedTokens')->document($token)->set([
+                'token' => $token,
+                'expires_at' => Carbon::now()->addWeek(),
+            ]);
+
+            return response()->json(['message' => 'تم تسجيل الخروج بنجاح'], 200);
+        } catch (ExpiredException $e) {
+            return response()->json(['message' => 'انتهت صلاحية التوكن، الرجاء تسجيل الدخول مجددًا'], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'توكن غير صالح'], 401);
+        }
+    }
+
+    public function checkToken(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return response()->json(['message' => 'توكن غير متوفر'], 400);
+        }
+
+        $blacklistedToken = $this->firestore->collection('BlacklistedTokens')->document($token)->snapshot();
+        if ($blacklistedToken->exists()) {
+            return response()->json(['message' => 'الجلسة منتهية، الرجاء تسجيل الدخول مرة أخرى'], 401);
+        }
+
+        return response()->json(['message' => 'التوكن صالح'], 200);
+    }
+
+    public function getUserFromToken(Request $request)
+    {
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            return null;
+        }
+
+        try {
+            $jwtSecret = Config::get('app.jwt_secret');
+            $decoded = JWT::decode($token, new Key($jwtSecret, 'HS256'));
+
+            return (object) [
+                'id' => $decoded->sub,
+                'phone' => $decoded->PhoneNumber,
+                'national_id' => $decoded->NationalID
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }
