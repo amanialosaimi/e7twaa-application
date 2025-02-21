@@ -51,6 +51,12 @@
     <true/>
 </dict>
 
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need your location to provide better services.</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>We need your location to provide better services.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>We require your location access to enhance your experience.</string>
 
 </dict>
 </plist>

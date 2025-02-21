@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:application/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart'; // Import for FilteringTextInputFormatter
@@ -21,7 +22,37 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isPhoneEmpty = false;
 
   final ApiService apiService = ApiService();
+Future<void> loginUser() async {
+  final String nationalId = nationalIdController.text.trim();
+  final String phoneNumber = phoneController.text.trim();
 
+  setState(() {
+    isNationalIdEmpty = nationalId.isEmpty;
+    isPhoneEmpty = phoneNumber.isEmpty;
+  });
+
+  if (isNationalIdEmpty || isPhoneEmpty) {
+    return;
+  }
+
+  setState(() => isLoading = true);
+
+  try {
+    final response = await apiService.login(nationalId, phoneNumber);
+
+    if (response.statusCode == 200) {
+        
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()));
+    } else {
+      _showErrorDialog("بيانات تسجيل الدخول غير صحيحة");
+    }
+  } catch (e) {
+    _showErrorDialog(e.toString());
+  } finally {
+    setState(() => isLoading = false);
+  }
+}
   Future<void> checkUser() async {
     final String nationalId = nationalIdController.text.trim();
     final String phoneNumber = phoneController.text.trim();
@@ -41,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await apiService.checkUser(nationalId, phoneNumber);
 
       if (response.statusCode == 200) {
+        _showErrorDialog(response.body);
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => const OtpScreen()));
       } else if (response.statusCode == 404) {
@@ -182,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: isLoading ? null : checkUser,
+        onPressed: isLoading ? null : loginUser,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFBB040),
           shape:

@@ -9,6 +9,7 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
+  
   final List<TextEditingController> _controllers =
   List.generate(5, (index) => TextEditingController());
 

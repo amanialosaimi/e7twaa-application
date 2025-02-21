@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'Volunteer_Journey.dart';
 import 'ProfileScreen.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,8 +12,75 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
-  bool _isPressed = false; // Controls the scale effect on the circle.
+  bool _isPressed = false;
+double? workLatitude = 24.844997459293005;
+double? workLongitude =  46.73506947784144;
 
+Future<void> _getUserLocation() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // Check if location services are enabled
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    print("Location services are disabled.");
+    return;
+  }
+
+  // Check for permissions
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      print("Location permissions are denied.");
+      return;
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    print("Location permissions are permanently denied.");
+    return;
+  }
+
+  // Get user location
+  Position position = await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.high,
+  );
+
+  print("User location: ${position.latitude}, ${position.longitude}");
+
+  // Calculate distance
+  double distance = Geolocator.distanceBetween(
+    workLatitude!, workLongitude!,
+    position.latitude, position.longitude,
+  );
+
+  print("Distance from work location: $distance meters");
+
+  // Check if user is within a certain radius (e.g., 50 meters)
+  if (distance > 1) {
+     _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
+  }
+}
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("خطأ"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("حسناً"),
+          ),
+        ],
+      ),
+    
+);
+
+
+  }
   void _onItemTapped(int index) {
     print('Tapped index: $index');
 
@@ -33,7 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const VolunteerJourneyScreen()),
+          MaterialPageRoute(
+              builder: (context) => const VolunteerJourneyScreen()),
         );
         break;
       default:
@@ -58,16 +127,15 @@ class _HomeScreenState extends State<HomeScreen> {
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined, size: 35), 
+            icon: Icon(Icons.home_outlined, size: 35),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined), 
+            icon: Icon(Icons.calendar_today_outlined),
             label: '',
           ),
         ],
       ),
-      
       body: Stack(
         children: [
           // Background image positioned behind the content.
@@ -177,8 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(65),
                             onTap: () {
-                              print("Circle pressed");
-                              // Add your onTap functionality here.
+                              _getUserLocation();
                             },
                             onTapDown: (_) {
                               setState(() {
@@ -209,7 +276,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: const [
-                                    Icon(Icons.touch_app, color: Colors.white, size: 35), // Uniform size
+                                    Icon(Icons.touch_app,
+                                        color: Colors.white,
+                                        size: 35), // Uniform size
                                     SizedBox(height: 5),
                                     Text(
                                       'تسجيل الدخول',
@@ -230,9 +299,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStatItem(Icons.access_time_outlined, '09:00 PM', ' ساعات اليوم', Colors.black),
-                            _buildStatItem(Icons.access_time_outlined, '12:00 PM', 'تسجيل الخروج', Colors.black),
-                            _buildStatItem(Icons.access_time_outlined, '03:00', ' تسجيل الدخول', Colors.black),
+                            _buildStatItem(Icons.access_time_outlined,
+                                '09:00 PM', ' ساعات اليوم', Colors.black),
+                            _buildStatItem(Icons.access_time_outlined,
+                                '12:00 PM', 'تسجيل الخروج', Colors.black),
+                            _buildStatItem(Icons.access_time_outlined, '03:00',
+                                ' تسجيل الدخول', Colors.black),
                           ],
                         ),
                       ],
@@ -247,7 +319,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatItem(IconData icon, String time, String label, Color iconColor) {
+  Widget _buildStatItem(
+      IconData icon, String time, String label, Color iconColor) {
     return Column(
       children: [
         Icon(icon, size: 28, color: iconColor), // Uniform size
