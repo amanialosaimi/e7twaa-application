@@ -16,3 +16,8 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/user', [AuthController::class, 'getUser']);
 
 Route::post('/checkUser', [VolunteersController::class, 'checkUser']);
+//ممكن ما تشتغل مع ال jwt فنبحث عن بديل
+Route::middleware('auth:api')->post('/logout', [VolunteersController::class, 'logout']);
+Route::middleware('auth:api')->get('/check-token', [VolunteersController::class, 'checkToken']);
+Route::middleware('auth:api')->post('/check-in', [VolunteersController::class, 'checkIn']);
+Route::middleware('auth:api')->post('/check-out', [VolunteersController::class, 'checkOut']);
