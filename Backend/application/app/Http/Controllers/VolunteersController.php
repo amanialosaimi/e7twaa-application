@@ -221,7 +221,7 @@ class VolunteersController extends Controller
             $now = Carbon::now();
             $attendanceRef->set([
                 'user_id' =>  $nationalID,
-                'login_time' => $now->addHour(3),
+                'login_time' => $now,
                 'logout_time' => null,
                 'checked_in_app' => true, // ✅ هذا الفلاغ يشير إلى أن الحضور تم عبر التطبيق
             ]);
@@ -275,7 +275,7 @@ class VolunteersController extends Controller
                 ['path' => 'logout_time', 'value' => $now->toDateTimeString()],
             ]);
             $loginTime = Carbon::parse($snapshot->get('login_time'));
-            $logoutTime = $now->addHours(3);
+            $logoutTime = $now;
             $duration = $logoutTime->diff($loginTime);
             $formattedDuration = sprintf('%02d:%02d:%02d', $duration->h, $duration->i, $duration->s);
             $volunteerRef->update([

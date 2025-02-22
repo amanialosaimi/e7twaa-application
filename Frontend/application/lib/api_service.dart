@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  final String apiUrl = "http://127.0.0.1:8000/api";
+  final String apiUrl = "http://127.0.0.1:8001/api";
 
   Future<http.Response> checkUser(String nationalId, String phoneNumber) async {
     final Uri url = Uri.parse('$apiUrl/checkUser');
@@ -64,6 +64,38 @@ Future<bool> isUserLoggedIn() async {
   );
 
   return response.statusCode == 200;
+}
+Future<http.Response> checkin(String token) async {
+  final Uri url = Uri.parse('$apiUrl/check-in');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',  // Add the token here
+      },
+    );
+    return response;
+  } catch (e) {
+    throw Exception("خطأ في الاتصال: $e");
+  }
+}
+Future<http.Response> checkOut(String token) async {
+  final Uri url = Uri.parse('$apiUrl/check-out');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',  // Add the token here
+      },
+    );
+    return response;
+  } catch (e) {
+    throw Exception("خطأ في الاتصال: $e");
+  }
 }
 
 }

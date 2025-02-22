@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'Volunteer_Journey.dart';
 import 'ProfileScreen.dart';
 import 'package:geolocator/geolocator.dart';
+import '../api_service.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,58 +12,118 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+final ApiService apiService = ApiService();
+bool checkIn = false;
+
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
   bool _isPressed = false;
-double? workLatitude = 24.844997459293005;
-double? workLongitude =  46.73506947784144;
+  double? workLatitude = 24.844997459293005;
+  double? workLongitude = 46.73506947784144;
 
-Future<void> _getUserLocation() async {
-  bool serviceEnabled;
-  LocationPermission permission;
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
-  // Check if location services are enabled
-  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    print("Location services are disabled.");
-    return;
-  }
-
-  // Check for permissions
-  permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      print("Location permissions are denied.");
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print("Location services are disabled.");
       return;
     }
-  }
 
-  if (permission == LocationPermission.deniedForever) {
-    print("Location permissions are permanently denied.");
-    return;
-  }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print("Location permissions are denied.");
+        return;
+      }
+    }
 
-  // Get user location
-  Position position = await Geolocator.getCurrentPosition(
-    desiredAccuracy: LocationAccuracy.high,
-  );
+    if (permission == LocationPermission.deniedForever) {
+      print("Location permissions are permanently denied.");
+      return;
+    }
 
-  print("User location: ${position.latitude}, ${position.longitude}");
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
 
-  // Calculate distance
-  double distance = Geolocator.distanceBetween(
-    workLatitude!, workLongitude!,
-    position.latitude, position.longitude,
-  );
+    print("User location: ${position.latitude}, ${position.longitude}");
 
-  print("Distance from work location: $distance meters");
+    double distance = Geolocator.distanceBetween(
+      workLatitude!,
+      workLongitude!,
+      position.latitude,
+      position.longitude,
+    );
 
-  // Check if user is within a certain radius (e.g., 50 meters)
+    print("Distance from work location: $distance meters");
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs
+        .getString('jwt_token');
+
+    if (token == null) {
+      print("Token is not available");
+      return;
+    } else {
+      print("Token retrieved: $token");
+    }
+
   if (distance > 1) {
      _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
   }
-}
+  else{
+ if (!checkIn) {
+      __showErrorDialogConfirm(
+          token, "هل انت متأكد من تسجيل الدخول؟"); 
+    } else {
+      __showErrorDialogConfirm(
+          token, "هل انت متأكد من تسجيل الخروج؟"); 
+    }
+  }
+   
+  }
+
+  void __showErrorDialogConfirm(String token, String m) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("تأكيد"),
+        content: Text(m),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text("لا"),
+          ),
+        
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+
+              if (!checkIn) {
+                await apiService.checkin(token);
+
+                setState(() {
+                  checkIn = true; 
+                });
+              } else {
+                await apiService.checkOut(token);
+
+                setState(() {
+                  checkIn = false;
+                });
+              }
+            },
+            child: const Text("نعم"),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -76,11 +138,9 @@ Future<void> _getUserLocation() async {
           ),
         ],
       ),
-    
-);
-
-
+    );
   }
+
   void _onItemTapped(int index) {
     print('Tapped index: $index');
 
@@ -138,7 +198,6 @@ Future<void> _getUserLocation() async {
       ),
       body: Stack(
         children: [
-          // Background image positioned behind the content.
           Positioned(
             top: 120,
             left: 0,
@@ -154,7 +213,6 @@ Future<void> _getUserLocation() async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with title and logo.
                 Container(
                   decoration: const BoxDecoration(
                     border: Border(
@@ -182,7 +240,6 @@ Future<void> _getUserLocation() async {
                   ),
                 ),
                 const SizedBox(height: 15),
-                // Welcome text.
                 Container(
                   padding: const EdgeInsets.only(right: 23),
                   alignment: Alignment.centerRight,
@@ -208,7 +265,6 @@ Future<void> _getUserLocation() async {
                   ),
                 ),
                 const SizedBox(height: 80),
-                // Central container with the pressable circle and stats.
                 Center(
                   child: Container(
                     width: 330,
@@ -229,7 +285,6 @@ Future<void> _getUserLocation() async {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Pressable circle button with shrink effect.
                         Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -269,21 +324,28 @@ Future<void> _getUserLocation() async {
                                 width: 130,
                                 height: 130,
                                 padding: const EdgeInsets.all(15),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFFBB040),
+                                decoration: BoxDecoration(
+                                  color: checkIn
+                                      ? const Color(0xFFEF5350)
+                                      : const Color(
+                                          0xFFFBB040),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.touch_app,
-                                        color: Colors.white,
-                                        size: 35), // Uniform size
-                                    SizedBox(height: 5),
+                                  children: [
+                                    const Icon(
+                                      Icons.touch_app,
+                                      color: Colors.white,
+                                      size: 35,
+                                    ), 
+                                    const SizedBox(height: 10),
                                     Text(
-                                      'تسجيل الدخول',
-                                      style: TextStyle(
-                                        fontSize: 19,
+                                      checkIn
+                                          ? 'تسجيل الخروج'
+                                          : 'تسجيل الدخول',
+                                      style: const TextStyle(
+                                        fontSize: 15,
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -295,7 +357,6 @@ Future<void> _getUserLocation() async {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        // Stat items row.
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -323,7 +384,7 @@ Future<void> _getUserLocation() async {
       IconData icon, String time, String label, Color iconColor) {
     return Column(
       children: [
-        Icon(icon, size: 28, color: iconColor), // Uniform size
+        Icon(icon, size: 28, color: iconColor),
         const SizedBox(height: 5),
         Text(
           time,
