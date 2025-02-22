@@ -14,12 +14,20 @@ class HomeScreen extends StatefulWidget {
 
 final ApiService apiService = ApiService();
 bool checkIn = false;
-
+TimeOfDay? checkInToday;
+TimeOfDay? checkOutToday;
+Duration? duration;
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
   bool _isPressed = false;
   double? workLatitude = 24.844997459293005;
   double? workLongitude = 46.73506947784144;
+  Future<String> getNameUser() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('ArabicName') ?? 'User'; // Default to 'User' if not found
+}
+
+
 
   Future<void> _getUserLocation() async {
     bool serviceEnabled;
@@ -59,10 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     print("Distance from work location: $distance meters");
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs
         .getString('jwt_token');
+
 
     if (token == null) {
       print("Token is not available");
@@ -71,10 +79,10 @@ class _HomeScreenState extends State<HomeScreen> {
       print("Token retrieved: $token");
     }
 
-  if (distance > 1) {
-     _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
-  }
-  else{
+  // if (distance > 1) {
+  //    _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
+  // }
+  // else{
  if (!checkIn) {
       __showErrorDialogConfirm(
           token, "هل انت متأكد من تسجيل الدخول؟"); 
@@ -84,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
    
-  }
+  // }
 
   void __showErrorDialogConfirm(String token, String m) {
     showDialog(
@@ -109,13 +117,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 setState(() {
                   checkIn = true; 
+                  checkInToday = TimeOfDay.now();
+
                 });
               } else {
                 await apiService.checkOut(token);
 
-                setState(() {
-                  checkIn = false;
-                });
+   setState(() {
+  checkOutToday = TimeOfDay.now();
+
+  // Ensure checkIn is not null before using its properties
+  if (checkIn != null) {
+    DateTime checkInDateTime = DateTime(0, 0, 0, checkInToday!.hour, checkInToday!.minute);
+    DateTime checkOutDateTime = DateTime(0, 0, 0, checkOutToday!.hour, checkOutToday!.minute);
+
+    // Calculate the duration
+    duration = checkOutDateTime.difference(checkInDateTime);
+
+    // You can now use the 'duration' to display hours and minutes
+    print('Duration: ${duration!.inHours} hours and ${duration!.inMinutes % 60} minutes');
+  } else {
+    print("Check-in time is null.");
+  }
+});
               }
             },
             child: const Text("نعم"),
@@ -241,17 +265,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 15),
                 Container(
-                  padding: const EdgeInsets.only(right: 23),
-                  alignment: Alignment.centerRight,
-                  child: const Text(
-                    'مرحبًا بك لمياء',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
+  padding: const EdgeInsets.only(right: 23),
+  alignment: Alignment.centerRight,
+  child: FutureBuilder<String>(
+    future: getNameUser(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const CircularProgressIndicator(); // Show loading while fetching
+      } else if (snapshot.hasError) {
+        return const Text('Error fetching user');
+      } else if (snapshot.hasData) {
+        return Text(
+          'مرحبًا بك ${snapshot.data}',
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        );
+      } else {
+        return const Text('مرحبًا بك');
+      }
+    },
+  ),
+),
+
                 const SizedBox(height: 5),
                 Container(
                   padding: const EdgeInsets.only(right: 23),
@@ -357,17 +395,37 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildStatItem(Icons.access_time_outlined,
-                                '09:00 PM', ' ساعات اليوم', Colors.black),
-                            _buildStatItem(Icons.access_time_outlined,
-                                '12:00 PM', 'تسجيل الخروج', Colors.black),
-                            _buildStatItem(Icons.access_time_outlined, '03:00',
-                                ' تسجيل الدخول', Colors.black),
-                          ],
-                        ),
+                       Row(
+  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  children: [
+   _buildStatItem(
+  Icons.access_time_outlined,
+  checkOutToday != null
+          ? "${duration!.inHours.toString().padLeft(2, '0')}:${duration!.inMinutes.toString().padLeft(2, '0')}"
+          : "--:--",
+  ' ساعات اليوم',
+  Colors.black,
+),
+
+     _buildStatItem(
+      Icons.access_time_outlined,
+      checkOutToday != null
+          ? "${checkOutToday!.hour.toString().padLeft(2, '0')}:${checkOutToday!.minute.toString().padLeft(2, '0')}"
+          : "--:--",
+      ' تسجيل الخروج',
+      Colors.black,
+    ),
+    _buildStatItem(
+      Icons.access_time_outlined,
+      checkInToday != null
+          ? "${checkInToday!.hour.toString().padLeft(2, '0')}:${checkInToday!.minute.toString().padLeft(2, '0')}"
+          : "--:--",
+      ' تسجيل الدخول',
+      Colors.black,
+    ),
+  ],
+),
+
                       ],
                     ),
                   ),
