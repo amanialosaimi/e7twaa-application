@@ -64,60 +64,65 @@ class VolunteersController extends Controller
     {
         $NationalID = trim($request->input('NationalID'));
         $phoneNumber = trim($request->input('PhoneNumber'));
-
+    
         if (!$NationalID || !$phoneNumber) {
             return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
         }
-
+    
         try {
             $projectId = env('GOOGLE_CLOUD_PROJECT');
             $firestore = new FirestoreClient([
                 'projectId' => $projectId,
             ]);
             ini_set('max_execution_time', 60);
-
+    
+            // Query Firestore for NationalID
             $query = $firestore->collection('Volunteers')
                 ->where('NationalID', '=', $NationalID)
-                ->where('PhoneNumber', '=', $phoneNumber)
                 ->limit(1);
-
-
+    
             $documents = $query->documents();
-
+    
             if ($documents->isEmpty()) {
                 return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
             }
-
-            $user = $documents->rows()[0];
-
-            // التحقق من عدم حظر التوكن القديم
-        
+    
+            // Get first matching document
+            $userDoc = $documents->rows()[0];
+            $userData = $userDoc->data();
+    
+            // Check if PhoneNumber contains the input
+            if (strpos($userData['PhoneNumber'], $phoneNumber) === false) {
+                return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
+            }
+    
+            // Check if the old token is blacklisted
             $oldToken = $request->bearerToken();
-            if($oldToken != null){
-                $blacklistedToken = $this->firestore->collection('BlacklistedTokens')->document($oldToken)->snapshot();
+            if ($oldToken) {
+                $blacklistedToken = $firestore->collection('BlacklistedTokens')->document($oldToken)->snapshot();
                 if ($blacklistedToken->exists()) {
                     return response()->json(['message' => 'تم تسجيل الخروج، الرجاء تسجيل الدخول مجددًا'], 401);
                 }
             }
-           
-
+    
+            // Generate JWT Token
             $payload = [
-                'sub' => $user->id(),
-                'phoneNumber' => $user['PhoneNumber'],
-                'nationalID' => $user['NationalID'],
+                'sub' => $userDoc->id(),
+                'phoneNumber' => $userData['PhoneNumber'],
+                'nationalID' => $userData['NationalID'],
                 'iat' => time(),
-                'exp' => time() + (60 * 60 * 24 * 20), // التوكن صالح لمدة 7 أيام
+                'exp' => time() + (60 * 60 * 24 * 20), // Token valid for 20 days
             ];
-
+    
             $jwtSecret = Config::get('app.jwt_secret');
             $token = JWT::encode($payload, $jwtSecret, 'HS256');
-
-            return response()->json(['token' => $token, 'user' => $user->data()], 200);
+    
+            return response()->json(['token' => $token, 'user' => $userData], 200);
+    
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
-
     public function logout(Request $request)
     {
         $token = $request->bearerToken();

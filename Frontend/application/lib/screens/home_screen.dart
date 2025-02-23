@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'Volunteer_Journey.dart';
 import 'ProfileScreen.dart';
 import 'package:geolocator/geolocator.dart';
-import '../api_service.dart'; 
+import '../api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,17 +17,17 @@ bool checkIn = false;
 TimeOfDay? checkInToday;
 TimeOfDay? checkOutToday;
 Duration? duration;
+
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
   bool _isPressed = false;
   double? workLatitude = 24.844997459293005;
   double? workLongitude = 46.73506947784144;
+
   Future<String> getNameUser() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('ArabicName') ?? 'User'; // Default to 'User' if not found
-}
-
-
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('firstName') ?? 'User';
+  }
 
   Future<void> _getUserLocation() async {
     bool serviceEnabled;
@@ -43,13 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print("Location permissions are denied.");
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print("Location permissions are permanently denied.");
       return;
     }
 
@@ -57,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
-    print("User location: ${position.latitude}, ${position.longitude}");
 
     double distance = Geolocator.distanceBetween(
       workLatitude!,
@@ -66,33 +63,27 @@ class _HomeScreenState extends State<HomeScreen> {
       position.longitude,
     );
 
-    print("Distance from work location: $distance meters");
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs
-        .getString('jwt_token');
-
+    String? token = prefs.getString('jwt_token');
 
     if (token == null) {
-      print("Token is not available");
       return;
     } else {
       print("Token retrieved: $token");
     }
 
-  // if (distance > 1) {
-  //    _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
-  // }
-  // else{
- if (!checkIn) {
-      __showErrorDialogConfirm(
-          token, "هل انت متأكد من تسجيل الدخول؟"); 
+    if (distance > 1) {
+       _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
+    }
+    else{
+    if (!checkIn) {
+      __showErrorDialogConfirm(token, "هل انت متأكد من تسجيل الدخول؟");
     } else {
-      __showErrorDialogConfirm(
-          token, "هل انت متأكد من تسجيل الخروج؟"); 
+      __showErrorDialogConfirm(token, "هل انت متأكد من تسجيل الخروج؟");
     }
   }
-   
-  // }
+
+  }
 
   void __showErrorDialogConfirm(String token, String m) {
     showDialog(
@@ -107,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: const Text("لا"),
           ),
-        
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
@@ -116,30 +106,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 await apiService.checkin(token);
 
                 setState(() {
-                  checkIn = true; 
+                  checkIn = true;
                   checkInToday = TimeOfDay.now();
-
                 });
               } else {
                 await apiService.checkOut(token);
 
-   setState(() {
-  checkOutToday = TimeOfDay.now();
+                setState(() {
+                  checkOutToday = TimeOfDay.now();
 
-  // Ensure checkIn is not null before using its properties
-  if (checkIn != null) {
-    DateTime checkInDateTime = DateTime(0, 0, 0, checkInToday!.hour, checkInToday!.minute);
-    DateTime checkOutDateTime = DateTime(0, 0, 0, checkOutToday!.hour, checkOutToday!.minute);
-
-    // Calculate the duration
-    duration = checkOutDateTime.difference(checkInDateTime);
-
-    // You can now use the 'duration' to display hours and minutes
-    print('Duration: ${duration!.inHours} hours and ${duration!.inMinutes % 60} minutes');
-  } else {
-    print("Check-in time is null.");
-  }
-});
+                  if (checkIn != null) {
+                    DateTime checkInDateTime = DateTime(
+                        0, 0, 0, checkInToday!.hour, checkInToday!.minute);
+                    DateTime checkOutDateTime = DateTime(
+                        0, 0, 0, checkOutToday!.hour, checkOutToday!.minute);
+                    duration = checkOutDateTime.difference(checkInDateTime);
+                  }
+                  checkIn = false;
+                });
               }
             },
             child: const Text("نعم"),
@@ -265,31 +249,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 15),
                 Container(
-  padding: const EdgeInsets.only(right: 23),
-  alignment: Alignment.centerRight,
-  child: FutureBuilder<String>(
-    future: getNameUser(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const CircularProgressIndicator(); // Show loading while fetching
-      } else if (snapshot.hasError) {
-        return const Text('Error fetching user');
-      } else if (snapshot.hasData) {
-        return Text(
-          'مرحبًا بك ${snapshot.data}',
-          style: const TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        );
-      } else {
-        return const Text('مرحبًا بك');
-      }
-    },
-  ),
-),
-
+                  padding: const EdgeInsets.only(right: 23),
+                  alignment: Alignment.centerRight,
+                  child: FutureBuilder<String>(
+                    future: getNameUser(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator(); // Show loading while fetching
+                      } else if (snapshot.hasError) {
+                        return const Text('Error fetching user');
+                      } else if (snapshot.hasData) {
+                        return Text(
+                          'مرحبًا بك ${snapshot.data}',
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        );
+                      } else {
+                        return const Text('مرحبًا بك');
+                      }
+                    },
+                  ),
+                ),
                 const SizedBox(height: 5),
                 Container(
                   padding: const EdgeInsets.only(right: 23),
@@ -365,8 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 decoration: BoxDecoration(
                                   color: checkIn
                                       ? const Color(0xFFEF5350)
-                                      : const Color(
-                                          0xFFFBB040),
+                                      : const Color(0xFFFBB040),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Column(
@@ -376,12 +358,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Icons.touch_app,
                                       color: Colors.white,
                                       size: 35,
-                                    ), 
+                                    ),
                                     const SizedBox(height: 10),
                                     Text(
-                                      checkIn
-                                          ? 'تسجيل الخروج'
-                                          : 'تسجيل الدخول',
+                                      checkIn ? 'تسجيل الخروج' : 'تسجيل الدخول',
                                       style: const TextStyle(
                                         fontSize: 15,
                                         color: Colors.white,
@@ -395,37 +375,35 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                       Row(
-  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  children: [
-   _buildStatItem(
-  Icons.access_time_outlined,
-  checkOutToday != null
-          ? "${duration!.inHours.toString().padLeft(2, '0')}:${duration!.inMinutes.toString().padLeft(2, '0')}"
-          : "--:--",
-  ' ساعات اليوم',
-  Colors.black,
-),
-
-     _buildStatItem(
-      Icons.access_time_outlined,
-      checkOutToday != null
-          ? "${checkOutToday!.hour.toString().padLeft(2, '0')}:${checkOutToday!.minute.toString().padLeft(2, '0')}"
-          : "--:--",
-      ' تسجيل الخروج',
-      Colors.black,
-    ),
-    _buildStatItem(
-      Icons.access_time_outlined,
-      checkInToday != null
-          ? "${checkInToday!.hour.toString().padLeft(2, '0')}:${checkInToday!.minute.toString().padLeft(2, '0')}"
-          : "--:--",
-      ' تسجيل الدخول',
-      Colors.black,
-    ),
-  ],
-),
-
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildStatItem(
+                              Icons.access_time_outlined,
+                              checkOutToday != null
+                                  ? "${duration!.inHours.toString().padLeft(2, '0')}:${duration!.inMinutes.toString().padLeft(2, '0')}"
+                                  : "--:--",
+                              ' ساعات اليوم',
+                              Colors.black,
+                            ),
+                            _buildStatItem(
+                              Icons.access_time_outlined,
+                              checkOutToday != null
+                                  ? "${checkOutToday!.hour.toString().padLeft(2, '0')}:${checkOutToday!.minute.toString().padLeft(2, '0')}"
+                                  : "--:--",
+                              ' تسجيل الخروج',
+                              Colors.black,
+                            ),
+                            _buildStatItem(
+                              Icons.access_time_outlined,
+                              checkInToday != null
+                                  ? "${checkInToday!.hour.toString().padLeft(2, '0')}:${checkInToday!.minute.toString().padLeft(2, '0')}"
+                                  : "--:--",
+                              ' تسجيل الدخول',
+                              Colors.black,
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

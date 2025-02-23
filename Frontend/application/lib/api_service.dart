@@ -40,13 +40,16 @@ class ApiService {
         final responseData = jsonDecode(response.body);
         String token = responseData['token'];
         // String nameUser = responseData['user'];
-Map<String, dynamic> user = responseData['user'];
-  String arabicName = user['ArabicName'];  // Get the ArabicName from the JSON
-print(arabicName);
+        Map<String, dynamic> user = responseData['user'];
+        String arabicName = user['ArabicName'];
+        String firstName = user['firstName'];
+        String status = user['status'];
         // تخزين التوكن في SharedPreferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('jwt_token', token);
-          await prefs.setString('ArabicName', arabicName);
+        await prefs.setString('ArabicName', arabicName);
+        await prefs.setString('firstName', firstName);
+        await prefs.setString('status', status);
         // await prefs.setString('nameUser', nameUser.toString());
       }
 

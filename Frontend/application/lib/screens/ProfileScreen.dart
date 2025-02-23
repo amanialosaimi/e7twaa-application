@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'volunteer_journey.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,7 +13,17 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedIndex = 0;
 
-   void _onItemTapped(int index) {
+  Future<String> getNameUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('ArabicName') ?? 'User';
+  }
+
+  Future<String> getStatusUser() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('status') ?? 'User';
+  }
+
+  void _onItemTapped(int index) {
     if (index == _selectedIndex) return;
 
     setState(() {
@@ -36,31 +47,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-       bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFFFBB040),
         unselectedItemColor: Colors.grey,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         onTap: _onItemTapped,
-          items: const [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline, size: 35),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined, size: 35), 
+            icon: Icon(Icons.home_outlined, size: 35),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined), 
+            icon: Icon(Icons.calendar_today_outlined),
             label: '',
           ),
         ],
       ),
       body: Stack(
         children: [
-           Positioned(
+          Positioned(
             top: 120,
             left: 0,
             right: 0,
@@ -70,13 +81,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fit: BoxFit.cover,
             ),
           ),
-          // Main content.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 60),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Container(
+                Container(
                   decoration: const BoxDecoration(
                     border: Border(
                       bottom: BorderSide(color: Color(0xFF939597), width: 0.3),
@@ -98,11 +108,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                 Row(
+                Row(
                   textDirection: TextDirection.rtl,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                     CircleAvatar(
+                    CircleAvatar(
                       radius: 30,
                       backgroundColor: Colors.grey,
                       child: const Icon(
@@ -112,50 +122,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                     Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      children: const [
-                        Text(
-                          'لمياء السحيباني',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.right,
+                      children: [
+                        FutureBuilder<String>(
+                          future: getNameUser(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Text(
+                                'جارٍ التحميل...',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.right,
+                              );
+                            } else if (snapshot.hasError) {
+                              return const Text(
+                                'حدث خطأ!',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                                textAlign: TextAlign.right,
+                              );
+                            } else {
+                              return Text(
+                                snapshot.data ?? 'User',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.right,
+                              );
+                            }
+                          },
                         ),
-                        Text(
-                          'عضو نشط',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                          textAlign: TextAlign.right,
+                        FutureBuilder<String>(
+                          future: getStatusUser(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Text(
+                                'جارٍ التحميل...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
+                                textAlign: TextAlign.right,
+                              );
+                            } else if (snapshot.hasError) {
+                              return const Text(
+                                'حدث خطأ!',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.red,
+                                ),
+                                textAlign: TextAlign.right,
+                              );
+                            } else {
+                              return Text(
+                                snapshot.data ?? 'User',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
+                                textAlign: TextAlign.right,
+                              );
+                            }
+                          },
                         ),
                       ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 30),
-                 _buildProfileOption(
+                _buildProfileOption(
                   'بياناتي ',
                   Icons.assignment_ind_outlined,
                   onTap: () {
-                     print("بياناتي tapped");
+                    print("بياناتي tapped");
                   },
                 ),
                 _buildProfileOption(
                   'الشهادات ',
                   Icons.insert_drive_file_outlined,
                   onTap: () {
-                     print("الشهادات tapped");
+                    print("الشهادات tapped");
                   },
                 ),
                 _buildProfileOption(
                   'اتصل بنا ',
                   Icons.phone_outlined,
                   onTap: () {
-                     print("اتصل بنا tapped");
+                    print("اتصل بنا tapped");
                   },
                 ),
                 _buildProfileOption(
@@ -163,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Icons.exit_to_app,
                   color: Colors.red,
                   onTap: () {
-                     print("تسجيل الخروج tapped");
+                    print("تسجيل الخروج tapped");
                   },
                 ),
               ],
@@ -174,13 +236,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-   Widget _buildProfileOption(String title, IconData icon,
+  Widget _buildProfileOption(String title, IconData icon,
       {Color color = Colors.black, VoidCallback? onTap}) {
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           border: Border(
             top: BorderSide(color: Colors.grey, width: 0.5),
             bottom: BorderSide(color: Colors.grey, width: 0.5),
@@ -188,14 +250,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: Row(
           children: [
-             Padding(
+            Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Icon(
                 Icons.arrow_back_ios,
                 color: color == Colors.red ? Colors.red : const Color(0xFFFBB040),
               ),
             ),
-             Expanded(
+            Expanded(
               child: Text(
                 title,
                 style: TextStyle(
@@ -206,7 +268,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 textAlign: TextAlign.right,
               ),
             ),
-             Padding(
+            Padding(
               padding: const EdgeInsets.only(left: 8.0),
               child: Icon(icon, color: color),
             ),
