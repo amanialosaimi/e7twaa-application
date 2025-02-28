@@ -1,0 +1,6 @@
+# pack-refs with: peeled fully-peeled sorted 
+f766346d3020d06b9e7ab026374210bd824cf340 refs/heads/gitignore
+30de4bcce5b849a6244cf294e39dfef81b5d7733 refs/heads/master
+7b984088c3929f6c0ed82003b8c2b0e4735b7498 refs/heads/new-branch-name
+7f475adc3331fd2ba8bbaada684471d0040034c1 refs/pull/1/head
+7b984088c3929f6c0ed82003b8c2b0e4735b7498 refs/pull/2/head
