@@ -1,1 +1,2 @@
-        .DS_Store
+        .DS_StoreBackend/application/storage/app/firebase/*.json
+Backend/application/storage/app/firebase/*.json
