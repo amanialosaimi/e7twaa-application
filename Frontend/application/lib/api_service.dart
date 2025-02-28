@@ -4,26 +4,45 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   final String apiUrl = "http://127.0.0.1:8000/api";
+Future<http.Response> checkUser(String nationalId, String phoneNumber) async {
+  final Uri url = Uri.parse('$apiUrl/checkUser');
 
-  Future<http.Response> checkUser(String nationalId, String phoneNumber) async {
-    final Uri url = Uri.parse('$apiUrl/checkUser');
+  try {
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "NationalID": nationalId,
+        "PhoneNumber": phoneNumber,
+      }),
+    );
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "NationalID": nationalId,
-          "PhoneNumber": phoneNumber,
-        }),
-      );
-      return response;
-    } catch (e) {
-      throw Exception("خطأ في الاتصال: $e");
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+
+      if (responseData.containsKey('Volunteers')) {  
+        Map<String, dynamic> user = responseData['Volunteers'];
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        
+        await prefs.setString("NationalID", user['NationalID'].toString());
+        await prefs.setString("PhoneNumber", user['PhoneNumber'].toString());
+        await prefs.setString("code", user['code'].toString());
+      } else {
+        throw Exception("User data not found in response.");
+      }
+    } else {
+      throw Exception("Failed to check user. Status code: ${response.statusCode}");
     }
-  }
 
-  Future<http.Response> login(String nationalId, String phoneNumber) async {
+    return response;
+  } catch (e) {
+    throw Exception("خطأ في الاتصال: ${e.toString()}");
+  }
+}
+
+
+  Future<http.Response> login(String nationalId, String phoneNumber,String code) async {
     final Uri url = Uri.parse('$apiUrl/login');
 
     try {
@@ -32,7 +51,8 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "NationalID": nationalId,
-          "PhoneNumber": phoneNumber,
+          "PhoneNumber": phoneNumber, 
+          "code": code,
         }),
       );
 

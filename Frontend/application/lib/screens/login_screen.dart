@@ -1,10 +1,11 @@
 import 'dart:convert';
-import 'package:e7twaa/screens/home_screen.dart';
+import 'package:application/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart'; // Import for FilteringTextInputFormatter
 import 'otp_screen.dart';
 import '../api_service.dart'; // Ensure you update the path accordingly.
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,7 +39,7 @@ Future<void> loginUser() async {
   setState(() => isLoading = true);
 
   try {
-    final response = await apiService.login(nationalId, phoneNumber);
+    final response = await apiService.login(nationalId, phoneNumber,"3");
 
     if (response.statusCode == 200) {
         
@@ -53,37 +54,38 @@ Future<void> loginUser() async {
     setState(() => isLoading = false);
   }
 }
-  Future<void> checkUser() async {
-    final String nationalId = nationalIdController.text.trim();
-    final String phoneNumber = phoneController.text.trim();
+ Future<void> checkUser() async {
+  final String nationalId = nationalIdController.text.trim();
+  final String phoneNumber = phoneController.text.trim();
 
-    setState(() {
-      isNationalIdEmpty = nationalId.isEmpty;
-      isPhoneEmpty = phoneNumber.isEmpty;
-    });
+  setState(() {
+    isNationalIdEmpty = nationalId.isEmpty;
+    isPhoneEmpty = phoneNumber.isEmpty;
+  });
 
-    if (isNationalIdEmpty || isPhoneEmpty) {
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      final response = await apiService.checkUser(nationalId, phoneNumber);
-
-      if (response.statusCode == 200) {
-        _showErrorDialog(response.body);
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (context) => const OtpScreen()));
-      } else if (response.statusCode == 404) {
-        _showErrorDialog("المستخدم غير موجود");
-      }
-    } catch (e) {
-      _showErrorDialog(e.toString());
-    } finally {
-      setState(() => isLoading = false);
-    }
+  if (isNationalIdEmpty || isPhoneEmpty) {
+    return;
   }
+
+  setState(() => isLoading = true);
+
+  try {
+    final response = await apiService.checkUser(nationalId, phoneNumber);
+
+    if (response.statusCode == 200) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const OtpScreen()),
+      );
+    } else if (response.statusCode == 404) {
+      _showErrorDialog("المستخدم غير موجود");
+    }
+  } catch (e) {
+    _showErrorDialog("خطأ في الاتصال: ${e.toString()}");
+  } finally {
+    setState(() => isLoading = false);
+  }
+}
+
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -214,7 +216,7 @@ Future<void> loginUser() async {
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: isLoading ? null : loginUser,
+        onPressed: isLoading ? null : checkUser,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFBB040),
           shape:

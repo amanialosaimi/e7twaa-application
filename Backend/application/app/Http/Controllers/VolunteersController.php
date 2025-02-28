@@ -17,13 +17,13 @@ class VolunteersController extends Controller
 
     public function __construct()
     {
-        $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'));
+        $factory = (new Factory)->withServiceAccount(storage_path('app/firebase/volunteersdata-cf17b-firebase-adminsdk-fbsvc-a5f56172ff.json'));
         $this->firestore = $factory->createFirestore()->database();
     }
 
     public function checkUser(Request $request)
     {
-        $NationalID = trim($request->input('NationalID'));
+        $NationalID = (int) trim($request->input('NationalID'));
         $phoneNumber = trim($request->input('PhoneNumber'));
 
         if (!$NationalID || !$phoneNumber) {
@@ -39,12 +39,33 @@ class VolunteersController extends Controller
 
             $query = $firestore->collection('Volunteers')
                 ->where('NationalID', '=', $NationalID)
-                ->where('PhoneNumber', '=', $phoneNumber)
                 ->limit(1);
 
 
-            $documents = $query->documents();
-
+                $documents = $query->documents();
+    
+                if ($documents->isEmpty()) {
+                    return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
+                }
+        
+                // Get first matching document
+                $userDoc = $documents->rows()[0];
+                $userData = $userDoc->data();
+        
+                // Check if PhoneNumber contains the input
+                if (strpos($userData['PhoneNumber'], $phoneNumber) === false) {
+                    return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
+                }
+        
+                // Check if the old token is blacklisted
+                $oldToken = $request->bearerToken();
+                if ($oldToken) {
+                    $blacklistedToken = $firestore->collection('BlacklistedTokens')->document($oldToken)->snapshot();
+                    if ($blacklistedToken->exists()) {
+                        return response()->json(['message' => 'تم تسجيل الخروج، الرجاء تسجيل الدخول مجددًا'], 401);
+                    }
+                }
+        
             foreach ($documents as $document) {
                 if ($document->exists()) {
                     return response()->json([
@@ -62,7 +83,8 @@ class VolunteersController extends Controller
 
     public function login(Request $request)
     {
-        $NationalID = trim($request->input('NationalID'));
+        $NationalID = (int) trim($request->input(key: 'NationalID'));
+        $code = (int) trim($request->input(key: 'code'));
         $phoneNumber = trim($request->input('PhoneNumber'));
     
         if (!$NationalID || !$phoneNumber) {
@@ -78,8 +100,9 @@ class VolunteersController extends Controller
     
             // Query Firestore for NationalID
             $query = $firestore->collection('Volunteers')
-                ->where('NationalID', '=', $NationalID)
-                ->limit(1);
+            ->where('NationalID', '=', $NationalID)
+            ->where('code', '=', $code)
+            ->limit(1);
     
             $documents = $query->documents();
     

@@ -12,7 +12,7 @@ class FirebaseController extends Controller
     public function __construct()
     {
         $firebase = (new Factory)
-            ->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'))
+            ->withServiceAccount(storage_path('app/firebase/volunteersdata-cf17b-firebase-adminsdk-fbsvc-a5f56172ff.json'))
             ->withDatabaseUri('https://database-test-application-default-rtdb.firebaseio.com');
 
         $database = $firebase->createDatabase();

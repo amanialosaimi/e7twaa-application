@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';  
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -9,9 +10,52 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  
+  bool isLoading = false;
   final List<TextEditingController> _controllers =
-  List.generate(5, (index) => TextEditingController());
+      List.generate(4, (index) => TextEditingController()); // Fix: 4 controllers
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("خطأ"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("حسناً"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> loginUser(String otpCode) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    print(otpCode);
+    final String nationalId = prefs.getString('NationalID') ?? 'User';
+    final String phoneNumber = prefs.getString('PhoneNumber') ?? 'User';
+
+    setState(() => isLoading = true);
+
+    try {
+      // Ensure apiService is defined
+      final response = await apiService.login(nationalId, phoneNumber, otpCode);
+
+      if (response.statusCode == 200) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        _showErrorDialog("بيانات تسجيل الدخول غير صحيحة");
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +92,6 @@ class _OtpScreenState extends State<OtpScreen> {
               fit: BoxFit.contain,  
             ),
           ),
-
           // Main Content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -59,19 +102,17 @@ class _OtpScreenState extends State<OtpScreen> {
                 const Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    'تم إرسال الرمز لرقم هاتفك',
+                    'الرجاء ادخال رمز التسجيل الخاص بك',
                     style: TextStyle(fontSize: 16, color: Colors.black54),
                   ),
                 ),
-
                 const SizedBox(height: 160),
-
                 // OTP Input Fields
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
-                    5,
-                        (index) => Container(
+                    4, // Ensure only 4 fields
+                    (index) => Container(
                       width: 59,
                       height: 59,
                       margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -90,45 +131,21 @@ class _OtpScreenState extends State<OtpScreen> {
                           border: InputBorder.none,
                         ),
                         onChanged: (value) {
-                          if (value.isNotEmpty && index < 4) {
-                            FocusScope.of(context).nextFocus();
+                          if (value.isNotEmpty) {
+                            if (index < 3) { // Ensure correct focus handling
+                              FocusScope.of(context).nextFocus();
+                            } else {
+                              // Check if all fields are filled
+                              String otpCode = _controllers.map((c) => c.text).join();
+                              if (otpCode.length == 4) { // Validate for 4-digit OTP
+                                loginUser(otpCode);
+                              }
+                            }
                           }
                         },
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 62),
-
-                // Resend Code & Timer (Same Row)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      '00:20',
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
-                    ),
-                    const SizedBox(width: 10),  
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),  
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'إعادة إرسال الرمز',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,  
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

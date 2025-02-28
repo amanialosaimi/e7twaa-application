@@ -18,7 +18,7 @@ class AuthController extends Controller
     public function __construct()
     {
         $factory = (new Factory)
-            ->withServiceAccount(storage_path('app/firebase/firebase_credentials.json'));
+            ->withServiceAccount(storage_path('app/firebase/volunteersdata-cf17b-firebase-adminsdk-fbsvc-a5f56172ff.json'));
 
         $this->firestore = $factory->createFirestore()->database();
         $this->database = $factory->createDatabase();
