@@ -88,9 +88,9 @@ class VolunteersController extends Controller
         $code = (int) trim($request->input(key: 'code'));
         $phoneNumber = trim($request->input('PhoneNumber'));
     
-        if (!$NationalID || !$phoneNumber) {
-            return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
-        }
+        // if (!$NationalID || !$phoneNumber) {
+        //     return response()->json(['message' => 'بيانات تسجيل الدخول غير صحيحة'], 401);
+        // }
     
         try {
             $projectId = env('GOOGLE_CLOUD_PROJECT');
@@ -218,6 +218,7 @@ class VolunteersController extends Controller
         }
     }
     
+
 
     public function checkIn(Request $request)
     {
