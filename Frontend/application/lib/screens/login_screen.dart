@@ -23,68 +23,68 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isPhoneEmpty = false;
 
   final ApiService apiService = ApiService();
-Future<void> loginUser() async {
-  final String nationalId = nationalIdController.text.trim();
-  final String phoneNumber = phoneController.text.trim();
+  Future<void> loginUser() async {
+    final String nationalId = nationalIdController.text.trim();
+    final String phoneNumber = phoneController.text.trim();
 
-  setState(() {
-    isNationalIdEmpty = nationalId.isEmpty;
-    isPhoneEmpty = phoneNumber.isEmpty;
-  });
+    setState(() {
+      isNationalIdEmpty = nationalId.isEmpty;
+      isPhoneEmpty = phoneNumber.isEmpty;
+    });
 
-  if (isNationalIdEmpty || isPhoneEmpty) {
-    return;
-  }
-
-  setState(() => isLoading = true);
-
-  try {
-    final response = await apiService.login(nationalId, phoneNumber,"3");
-
-    if (response.statusCode == 200) {
-        
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()));
-    } else {
-      _showErrorDialog("بيانات تسجيل الدخول غير صحيحة");
+    if (isNationalIdEmpty || isPhoneEmpty) {
+      return;
     }
-  } catch (e) {
-    _showErrorDialog(e.toString());
-  } finally {
-    setState(() => isLoading = false);
-  }
-}
- Future<void> checkUser() async {
-  final String nationalId = nationalIdController.text.trim();
-  final String phoneNumber = phoneController.text.trim();
 
-  setState(() {
-    isNationalIdEmpty = nationalId.isEmpty;
-    isPhoneEmpty = phoneNumber.isEmpty;
-  });
+    setState(() => isLoading = true);
 
-  if (isNationalIdEmpty || isPhoneEmpty) {
-    return;
-  }
+    try {
+      final response = await apiService.login(nationalId, phoneNumber,"3");
 
-  setState(() => isLoading = true);
+      if (response.statusCode == 200) {
 
-  try {
-    final response = await apiService.checkUser(nationalId, phoneNumber);
-
-    if (response.statusCode == 200) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const OtpScreen()),
-      );
-    } else if (response.statusCode == 404) {
-      _showErrorDialog("المستخدم غير موجود");
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()));
+      } else {
+        _showErrorDialog("بيانات تسجيل الدخول غير صحيحة");
+      }
+    } catch (e) {
+      _showErrorDialog(e.toString());
+    } finally {
+      setState(() => isLoading = false);
     }
-  } catch (e) {
-    _showErrorDialog("خطأ في الاتصال: ${e.toString()}");
-  } finally {
-    setState(() => isLoading = false);
   }
-}
+  Future<void> checkUser() async {
+    final String nationalId = nationalIdController.text.trim();
+    final String phoneNumber = phoneController.text.trim();
+
+    setState(() {
+      isNationalIdEmpty = nationalId.isEmpty;
+      isPhoneEmpty = phoneNumber.isEmpty;
+    });
+
+    if (isNationalIdEmpty || isPhoneEmpty) {
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final response = await apiService.checkUser(nationalId, phoneNumber);
+
+      if (response.statusCode == 200) {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const OtpScreen()),
+        );
+      } else if (response.statusCode == 404) {
+        _showErrorDialog("المستخدم غير موجود");
+      }
+    } catch (e) {
+      _showErrorDialog("خطأ في الاتصال: ${e.toString()}");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
 
   void _showErrorDialog(String message) {
@@ -105,8 +105,12 @@ Future<void> loginUser() async {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return GestureDetector(
+        onTap: () {
+      FocusScope.of(context).unfocus(); 
+    },
+    child: Scaffold(
+    backgroundColor: Colors.white,
       body: Stack(
         children: [
           Positioned.fill(
@@ -138,6 +142,7 @@ Future<void> loginUser() async {
           ),
         ],
       ),
+    )
     );
   }
 
@@ -220,15 +225,15 @@ Future<void> loginUser() async {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFBB040),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         child: isLoading
             ? const CircularProgressIndicator(color: Colors.white)
             : const Text('المتابعة',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white)),
       ),
     );
   }
