@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'Volunteer_Journey.dart';
 import 'ProfileScreen.dart';
@@ -21,8 +22,8 @@ Duration? duration;
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 1;
   bool _isPressed = false;
-  double? workLatitude = 24.844997459293005;
-  double? workLongitude = 46.73506947784144;
+  double? workLatitude = 24.8340996;
+  double? workLongitude =  46.7280004;
 
   Future<String> getNameUser() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
       print("Token retrieved: $token");
     }
 
-    if (distance > 1) {
+    if (distance > 10.000) {
        _showErrorDialog("يبدو أنك خارج الموقع المحدد لتسجيل الدخول، تأكد من وجودك في المكان الصحيح وحول مرة أخرى");
     }
     else{

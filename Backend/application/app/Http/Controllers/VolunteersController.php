@@ -38,8 +38,9 @@ class VolunteersController extends Controller
             ini_set('max_execution_time', 60);
 
             $query = $firestore->collection('Volunteers')
-                ->where('NationalID', '=', $NationalID)
-                ->limit(1);
+            ->where('NationalID', '=', $NationalID)
+            ->where('IsActive', '=', "YES")
+            ->limit(1);
 
 
                 $documents = $query->documents();
@@ -101,7 +102,7 @@ class VolunteersController extends Controller
             // Query Firestore for NationalID
             $query = $firestore->collection('Volunteers')
             ->where('NationalID', '=', $NationalID)
-            ->where('code', '=', $code)
+            ->where('Code', '=', $code)
             ->limit(1);
     
             $documents = $query->documents();
